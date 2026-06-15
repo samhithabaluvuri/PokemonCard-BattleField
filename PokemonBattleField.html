@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Battle Simulator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #eaeded;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #131921;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .setup-panel {
+      background-color: #131921;
+      width: 100%;
+      max-width: 700px;
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .setup-panel label {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .setup-panel input {
+      width: 80px;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      text-align: center;
+      outline: none;
+    }
+
+    .battle-btn {
+      background-color: #ffd814;
+      border: 1px solid #fcd200;
+      border-radius: 20px;
+      padding: 8px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f1111;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+    }
+
+    .battle-btn:hover {
+      background-color: #f7ca00;
+    }
+
+    
+    .arena-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 700px;
+      border: 2px solid #333333;
+      border-radius: 8px;
+      padding: 20px;
+      box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .battle-screen {
+      border: 2px solid #777777;
+      border-radius: 4px;
+      height: 320px;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+  
+    .fighter {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+
+    .player-side {
+      bottom: 20px;
+      left: 30px;
+      flex-direction: row;
+    }
+
+    
+    .system-side {
+      top: 20px;
+      right: 30px;
+      flex-direction: row-reverse;
+    }
+
+    .sprite-box {
+      width: 130px;
+      height: 130px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sprite-box img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .status-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-card {
+      border: 2px solid #444444;
+      border-radius: 8px;
+      padding: 10px 15px;
+      background: white;
+      min-width: 160px;
+      box-shadow: 2px 2px 0px #444444;
+    }
+
+    .pokemon-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #0f1111;
+      text-transform: capitalize;
+      margin: 0 0 6px 0;
+    }
+
+    .move-badge {
+      display: inline-block;
+      background-color: #e2f0d9;
+      border: 1px solid #385723;
+      color: #385723;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: capitalize;
+    }
+
+    /* Ownership Label Styling (You / System) */
+    .ownership-tag {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #565959;
+      margin-top: 2px;
+    }
+    
+    .player-side .ownership-tag {
+      color: #007185;
+    }
+
+    .system-side .ownership-tag {
+      color: #cc0c39;
+      text-align: right;
+    }
+
+    /* --- Lower Output Log Panel --- */
+    .log-header {
+      font-size: 14px;
+      font-weight: bold;
+      color: #0f1111;
+      margin-bottom: 6px;
+    }
+
+    .output-row {
+      display: flex;
+      gap: 15px;
+      align-items: stretch;
+    }
+
+    .battle-log-box {
+      flex: 1;
+      border: 1px solid #a6a6a6;
+      border-radius: 4px;
+      padding: 12px;
+      height: 70px;
+      font-size: 14px;
+      color: #333333;
+      background-color: #fafafa;
+      line-height: 1.5;
+      overflow-y: auto;
+    }
+
+    .status-alert {
+      color: #cc0c39;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Battle Wireframe Engine</h1>
+
+  <div class="setup-panel">
+    <label for="pokemon-id">Enter Pokémon ID (1-1000):</label>
+    <input type="number" id="pokemon-id" min="1" max="1000" value="16">
+    <button id="start-btn" class="battle-btn">Start Battle!</button>
+  </div>
+
+  <div class="arena-container">
+    <div class="battle-screen">
+      
+      <div class="fighter system-side">
+        <div class="sprite-box">
+          <img id="system-sprite" src="" alt="System Sprite">
+        </div>
+        <div class="status-card-wrapper">
+          <div class="status-card">
+            <p class="pokemon-name" id="system-name">Opponent</p>
+            <span class="move-badge" id="system-move">Analyzing...</span>
+          </div>
+          <div class="ownership-tag">◀ System</div>
+        </div>
+      </div>
+
+      <div class="fighter player-side">
+        <div class="sprite-box">
+          <img id="player-sprite" src="" alt="Player Sprite">
+        </div>
+        <div class="status-card-wrapper">
+          <div class="status-card">
+            <p class="pokemon-name" id="player-name">Your Choice</p>
+            <span class="move-badge" id="player-move">Ready</span>
+          </div>
+          <div class="ownership-tag">You ▶</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="log-header">Battle Log</div>
+    <div class="output-row">
+      <div class="battle-log-box" id="log-box">
+        Enter an index number above and click "Start Battle!" to run the combat loop engine.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const pokemonIdInput = document.getElementById('pokemon-id');
+    const logBox = document.getElementById('log-box');
+
+    // UI Hooks
+    const pName = document.getElementById('player-name');
+    const pSprite = document.getElementById('player-sprite');
+    const pMove = document.getElementById('player-move');
+
+    const sName = document.getElementById('system-name');
+    const sSprite = document.getElementById('system-sprite');
+    const sMove = document.getElementById('system-move');
+
+    startBtn.addEventListener('click', runBattleCycle);
+
+    async function runBattleCycle() {
+      const playerId = pokemonIdInput.value.trim();
+      if (!playerId || playerId < 1) {
+        logBox.innerHTML = "<span class='status-alert'>Please enter a valid Pokémon ID number.</span>";
+        return;
+      }
+
+      logBox.innerHTML = "Connecting to arena database...";
+
+      try {
+        
+        const playerResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${playerId}`);
+        if (!playerResponse.ok) throw new Error("Invalid ID");
+        const playerData = await playerResponse.json();
+
+        
+        const systemId = Math.floor(Math.random() * 500) + 1;
+        const systemResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${systemId}`);
+        const systemData = await systemResponse.json();
+
+        pSprite.src = playerData.sprites.other["official-artwork"].front_default || playerData.sprites.front_default;
+        sSprite.src = systemData.sprites.other["official-artwork"].front_default || systemData.sprites.front_default;
+
+        pName.innerText = playerData.name;
+        sName.innerText = systemData.name;
+
+       
+        let playerAbilitiesList = [];
+        playerData.abilities.forEach(item => {
+          playerAbilitiesList.push(item.ability.name);
+        });
+
+        let systemAbilitiesList = [];
+        systemData.abilities.forEach(item => {
+          systemAbilitiesList.push(item.ability.name);
+        });
+
+        const pAttackName = playerAbilitiesList[0] || "Tackle";
+        const pPower = playerData.stats[1].base_stat; 
+        const pSpeed = playerData.stats[5].base_stat; 
+
+        const sAttackName = systemAbilitiesList[0] || "Growl";
+        const sPower = systemData.stats[1].base_stat;
+        const sSpeed = systemData.stats[5].base_stat;
+
+      
+        pMove.innerText = `${pAttackName}: ${pPower}`;
+        sMove.innerText = `${sAttackName}: ${sPower}`;
+
+      
+        let winnerName = "";
+        let logDescription = "";
+
+        if (pPower === sPower) {
+          if (pSpeed >= sSpeed) {
+            winnerName = "You (" + playerData.name + ")";
+            logDescription = `${playerData.name} outspeeded and landed a decisive blow with ${pAttackName}, knocking out the System's ${systemData.name}!`;
+          } else {
+            winnerName = "System (" + systemData.name + ")";
+            logDescription = "The System's " + `${systemData.name} moved faster and delivered a critical hit using ${sAttackName}, knocking out your ${playerData.name}!`;
+          }
+        } else if (pPower > sPower) {
+          winnerName = "You (" + playerData.name + ")";
+          logDescription = `${playerData.name} lands a decisive blow with ${pAttackName}, crushing the System's ${systemData.name}!`;
+        } else {
+          winnerName = "System (" + systemData.name + ")";
+          logDescription = `The System's ${systemData.name} retaliates with immense force using ${sAttackName}, overpowering your ${playerData.name}!`;
+        }
+
+        
+        logBox.innerHTML = `<span>${logDescription}</span> <br><span style="color:#385723; font-size:12px; font-weight:bold; display:block; margin-top:4px;">🏆 Winner: ${winnerName.toUpperCase()}</span>`;
+
+      } catch (err) {
+        console.error(err);
+        logBox.innerHTML = "<span class='status-alert'>⚠️ Error matching battle parameters. Please try a different ID number.</span>";
+      }
+    }
+
+    
+    runBattleCycle();
+  </script>
+</body>
+</html>
