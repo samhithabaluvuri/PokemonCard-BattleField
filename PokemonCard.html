@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokemon Character Card</title>
+  <style>
+    /* --- CSS STYLING --- */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #eaeded;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+  
+    .search-container {
+      background-color: #131921;
+      width: 100%;
+      max-width: 500px;
+      padding: 12px;
+      border-radius: 6px;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .search-btn {
+      background-color: #febd69;
+      border: none;
+      border-radius: 4px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .search-btn:hover {
+      background-color: #f3a847;
+    }
+
+    
+    .amazon-card {
+      background: #ffffff;
+      width: 340px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+
+    .img-wrapper {
+      width: 100%;
+      height: 220px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+      background-color: #f7f7f7;
+      border-radius: 4px;
+    }
+
+    .img-wrapper img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .product-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f1111;
+      line-height: 1.4;
+      margin: 0 0 12px 0;
+      text-transform: capitalize;
+      border-bottom: 1px solid #e7e7e7;
+      padding-bottom: 8px;
+    }
+
+    .pokemon-specs {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+
+    .pokemon-specs li {
+      font-size: 14px;
+      color: #333333;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .pokemon-specs span {
+      font-weight: bold;
+      color: #0f1111;
+      display: inline-block;
+      width: 110px; 
+    }
+
+    .error-msg {
+      color: #cc0c39;
+      background: #fff0f0;
+      padding: 12px;
+      border: 1px solid #cc0c39;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="search-container">
+    <input type="text" id="search-input" class="search-input" placeholder="Type Pokémon name (e.g., gengar, charizard)..." value="gengar">
+    <button id="search-btn" class="search-btn">Search</button>
+  </div>
+
+  <div id="product-container"></div>
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const container = document.getElementById('product-container');
+
+    searchBtn.addEventListener('click', () => fetchPokemon(searchInput.value.trim().toLowerCase()));
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') fetchPokemon(searchInput.value.trim().toLowerCase());
+    });
+
+    function fetchPokemon(name) {
+      if (!name) return;
+      
+      container.innerHTML = "<p style='color: #565959;'>Loading characters...</p>";
+
+      fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+        .then(response => {
+          if (!response.ok) throw new Error('Pokemon not found');
+          return response.json();
+        })
+        .then(data => {
+          
+          const characterData = {
+            "name": data.name,
+            "generation": `Generation ${data.id}`,
+            "imageUrl": data.sprites.other["official-artwork"].front_default || data.sprites.front_default,
+            "height": (data.height / 10) + " m",
+            "weight": (data.weight / 10) + " kg",
+            "types": data.types.map(t => t.type.name).join(', '),
+            "abilities": data.abilities.map(a => a.ability.name).join(', ')
+          };
+
+          renderCharacterCard(characterData);
+        })
+        .catch(error => {
+          container.innerHTML = `<div class="error-msg">⚠️ Could not find "${name}". Check spelling and try again!</div>`;
+        });
+    }
+
+    function renderCharacterCard(pokemon) {
+      container.innerHTML = `
+        <div class="amazon-card">
+          <div class="img-wrapper">
+            <img src="${pokemon.imageUrl}" alt="${pokemon.name}">
+          </div>
+          
+          <h2 class="product-title">${pokemon.name}</h2>
+          
+          <ul class="pokemon-specs">
+            <li><span>Element Type:</span> ${pokemon.types}</li>
+            <li><span>Specialization:</span> ${pokemon.abilities}</li>
+            <li><span>Height:</span> ${pokemon.height}</li>
+            <li><span>Item Weight:</span> ${pokemon.weight}</li>
+            <li><span>Index Number:</span> #${pokemon.generation.replace('Generation ', '')}</li>
+          </ul>
+        </div>
+      `;
+    }
+
+
+    fetchPokemon('gengar');
+  </script>
+</body>
+</html>
